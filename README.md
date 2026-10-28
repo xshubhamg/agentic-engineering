@@ -37,6 +37,8 @@ monitored service.
 | `docs/01-glossary.md` | Precise definitions. If you cannot define a term, you do not know it. |
 | `docs/02-stack.md` | Stack decisions with reasons and swap options. |
 | `docs/03-engineering-log.md` | Daily log template. This becomes your portfolio narrative. |
+| `docs/04-launch-post.md` | The announcement post, infographic brief, alt text. |
+| `docs/05-stage-2-primer.md` | Study day before retrieval: concepts, pgvector, traps, self-check. |
 | `projects/01…08/README.md` | Stage brief: goal, concepts, done criteria, failure drills. |
 
 ## Rules that make this work

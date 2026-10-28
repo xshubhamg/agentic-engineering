@@ -12,6 +12,10 @@ fetch timestamp — and says "insufficient evidence" when it should.
 The deliverable is not a vector database. It is a system whose evidence you can
 inspect and whose failure to answer you can trust.
 
+**Before you start: [the Stage 2 primer](../../docs/05-stage-2-primer.md)** — a
+study-day read on retrieval, pgvector, chunking, citations, abstention, and the
+ten traps that make RAG demos look better than they are.
+
 ## Why now
 
 Stage 1's limitation is not subtle: the model does not know this company, and
