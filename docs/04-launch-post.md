@@ -1,5 +1,7 @@
 # Launch post — announcing the 30-day build
 
+Repo: https://github.com/xshubhamg/agentic-engineering (public, CI green)
+
 Three assets: a LinkedIn/X post, an infographic prompt, and fallbacks for when the
 image generator cannot spell. Update the status line as you pass gates; do not
 announce stages you have not built.
@@ -178,6 +180,6 @@ Midjourney and many diffusion models will mangle 40+ words. Two honest options:
 - [ ] Replace `DAY 01 / 30` with the real day
 - [ ] Confirm the test count and the milestone claim are still true
 - [ ] Check spelling of every tool name you mention (LangGraph, pgvector, Temporal)
-- [ ] Add the repo link if it is public, or say "repo at the end"
+- [x] Repo is public: https://github.com/xshubhamg/agentic-engineering
 - [ ] Have a reply ready for "which model?" — answer: `deepseek/deepseek-v4.1-flash`
       via OpenRouter, chosen for cost and tool-calling support, not hype
