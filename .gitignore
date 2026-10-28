@@ -1,0 +1,23 @@
+# secrets and local state
+.env
+.env.*
+!.env.example
+*.pem
+
+# python
+.venv/
+__pycache__/
+*.pyc
+.ruff_cache/
+.pytest_cache/
+.mypy_cache/
+
+# data and artifacts
+*.sqlite3
+data/corpus/
+!data/corpus/.gitkeep
+traces/*.jsonl
+
+# node (if a UI appears later)
+node_modules/
+dist/
