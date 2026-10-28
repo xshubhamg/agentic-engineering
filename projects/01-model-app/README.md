@@ -3,6 +3,10 @@
 Days 1–3 · `stage-1` tag · Gate: a single-call app you would trust with a
 stranger's question
 
+**Read [CODE-TOUR.md](CODE-TOUR.md) alongside the code** — it explains why each
+file exists, with deep dives on the retry state machine and the streaming commit
+point.
+
 ## End goal
 
 You can explain, from the wire up, what happens when your code talks to a model:
@@ -63,7 +67,7 @@ JSON `model_call` log line.
 
 ```bash
 uv run signal ask "…" --stream     # token by token; same metadata at the end
-uv run pytest                       # 20 tests, no key, no network
+uv run pytest                       # 23 tests, no key, no network
 uv run ruff check . && uv run ruff format --check .
 ```
 
@@ -78,7 +82,7 @@ Already here — read it, then verify it, do not trust it:
 | `src/signal_agent/errors.py` | typed failures, each mapping to exactly one recovery strategy |
 | `src/signal_agent/prompts/answer.md` | prompt versioned by content hash, so logs say `answer@320c4397` |
 | `src/signal_agent/cli.py` | exit codes per failure kind: 2 truncated, 3 auth, 4 provider, 5 budget, 7 config |
-| `tests/` | 20 tests against a scripted provider transport (fake, fast, no key) |
+| `tests/` | 23 tests against a scripted provider transport (fake, fast, no key) |
 
 Yours — this is the actual work of days 1–3:
 

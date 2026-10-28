@@ -263,7 +263,7 @@ class ModelClient:
         return {
             "model": self._s.model,
             "messages": list(messages),
-            "max_tokens": max_tokens or self._s.max_tokens_per_call,
+            "max_tokens": self._s.max_tokens_per_call if max_tokens is None else max_tokens,
             "temperature": self._s.temperature if temperature is None else temperature,
             # OpenRouter extension: ask for cost on the response.
             "extra_body": {"usage": {"include": True}},
@@ -394,12 +394,13 @@ class ModelClient:
     def _backoff(self, attempt: int, error: Exception) -> float:
         retry_after = getattr(error, "retry_after_s", None)
         if retry_after:
+            # The server knows better than our formula; cap it so a bad
+            # Retry-After cannot park us for an hour.
             return min(float(retry_after), self._s.retry_max_delay_s)
-        base = min(
-            self._s.retry_base_delay_s * (2 ** (attempt - 1)),
-            self._s.retry_max_delay_s,
-        )
-        return base * (0.5 + random.random())  # jitter: avoid synchronised retries
+        base = self._s.retry_base_delay_s * (2 ** (attempt - 1))
+        jittered = base * (0.5 + random.random())  # jitter: avoid synchronised retries
+        # Cap the *result*, not just the base, or jitter can exceed the ceiling.
+        return min(jittered, self._s.retry_max_delay_s)
 
     def _check_budget(self) -> None:
         if self._spend_usd >= self._s.max_cost_usd:

@@ -11,7 +11,7 @@ import sys
 
 from pydantic import ValidationError
 
-from signal_agent.client import ModelClient
+from signal_agent.client import Completion, ModelClient
 from signal_agent.config import Settings
 from signal_agent.errors import (
     BudgetExceeded,
@@ -99,8 +99,6 @@ def main(argv: list[str] | None = None) -> int:
             print(completion.text)
     except ModelTruncated as exc:
         completion = exc.completion
-        if not raise_on_truncation:
-            pass
         print(
             f"\ntruncated: hit max_tokens after {completion.usage.output_tokens} output tokens. "
             "Raise --max-tokens or ask a narrower question.",
@@ -125,7 +123,7 @@ def main(argv: list[str] | None = None) -> int:
     return EXIT_OK
 
 
-def _print_meta(completion) -> None:
+def _print_meta(completion: Completion) -> None:
     cost = (
         f"${completion.usage.cost_usd:.6f}" if completion.usage.cost_usd is not None else "unknown"
     )

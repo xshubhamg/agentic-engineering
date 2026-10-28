@@ -66,8 +66,8 @@ uv run signal ask "What does a healthy sales pipeline look like for a B2B SaaS c
 ```
 
 The answer prints on stdout; one metadata line and one JSON log line print on
-stderr. Then open `projects/01-model-app/README.md` and work the failure drills
-— the scaffold is the starting point, not the assignment.
+stderr. Then read `projects/01-model-app/CODE-TOUR.md` with the code open, and
+work the failure drills — the scaffold is the starting point, not the assignment.
 
 Do not read all eight briefs up front; the later ones will not make sense yet,
 and that is fine.

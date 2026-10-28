@@ -20,6 +20,7 @@ from signal_agent.errors import (
     ModelAuthError,
     ModelBadRequest,
     ModelError,
+    ModelRateLimited,
     ModelTimeout,
     ModelTruncated,
     ModelUnavailable,
@@ -328,3 +329,63 @@ def test_stream_truncation_raises_after_delivering_partial_text(
 
     assert caught.value.completion.text == "half an ans"
     assert caught.value.completion.truncated is True
+
+
+# --- backoff arithmetic ---------------------------------------------------
+
+
+def test_backoff_result_never_exceeds_the_cap(
+    client: ModelClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # Force the largest possible jitter; the cap must still hold.
+    monkeypatch.setattr("signal_agent.client.random.random", lambda: 0.9999)
+
+    delay = client._backoff(10, ModelError("boom"))
+
+    assert delay <= client._s.retry_max_delay_s
+
+
+def test_backoff_respects_but_caps_retry_after(client: ModelClient) -> None:
+    assert client._backoff(1, ModelRateLimited("slow", retry_after_s=2)) == 2.0
+    assert client._backoff(1, ModelRateLimited("slow", retry_after_s=9999)) == (
+        client._s.retry_max_delay_s
+    )
+
+
+# --- known limitation -----------------------------------------------------
+
+
+def test_abandoning_a_stream_early_skips_accounting(
+    client: ModelClient, provider: Provider
+) -> None:
+    """Known limitation: usage and cost are recorded only when the stream drains.
+
+    A caller that breaks out of iteration (a disconnected HTTP client in stage 7)
+    never triggers `_record`, so that spend is invisible. Either drain the stream
+    or account for the request before iterating.
+    """
+    provider.reply(
+        200,
+        content=_sse(
+            {
+                "id": "gen-1",
+                "model": "deepseek/deepseek-v4.1-flash",
+                "choices": [{"index": 0, "delta": {"content": "Hel"}}],
+            },
+            {
+                "id": "gen-1",
+                "model": "deepseek/deepseek-v4.1-flash",
+                "choices": [{"index": 0, "delta": {}, "finish_reason": "stop"}],
+                "usage": {"prompt_tokens": 1, "completion_tokens": 1, "cost": 0.000001},
+            },
+        ),
+        headers={"content-type": "text/event-stream"},
+    )
+
+    stream = client.stream(MESSAGES)
+    iterator = iter(stream)
+    assert next(iterator) == "Hel"
+    iterator.close()
+
+    assert stream.completion is None
+    assert client.spent_usd == 0.0
