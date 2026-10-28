@@ -33,17 +33,88 @@ spend months reading framework docs to understand a payload they have never seen
 6. Prompt as a versioned file, not an inline string. System instructions
    separate from user content — that separation matters in Stage 3.
 
-Suggested shape:
+Suggested shape (this is what is scaffolded below):
 
 ```
-src/signal/
-  config.py        # env → typed settings
-  client.py        # ModelClient: call, stream, retry, account
-  prompts/answer.md
+src/signal_agent/
+  config.py            # env → typed settings
+  client.py            # ModelClient: call, stream, retry, account, budget
+  errors.py            # typed failures
+  prompts/answer.md    # prompt, versioned by content hash
   logging.py
   cli.py
-tests/test_client.py
+tests/                 # scripted provider, no network
 ```
+
+Note: the package is `signal_agent`, not `signal` — `signal` is a stdlib module
+and would shadow the package at import time.
+
+## Run it
+
+```bash
+cp ../../.env.example .env      # paste your OpenRouter key
+uv sync
+uv run signal ask "What does a healthy sales pipeline look like for a B2B SaaS company?"
+```
+
+Expected: the answer on stdout, then on stderr one metadata line
+(`stop=stop tokens=.../... cost=$... latency=...ms attempts=1 id=req_...`) and one
+JSON `model_call` log line.
+
+```bash
+uv run signal ask "…" --stream     # token by token; same metadata at the end
+uv run pytest                       # 20 tests, no key, no network
+uv run ruff check . && uv run ruff format --check .
+```
+
+## What is scaffolded, and what is yours
+
+Already here — read it, then verify it, do not trust it:
+
+| File | What it gives you |
+| --- | --- |
+| `src/signal_agent/config.py` | env → typed settings; a missing key fails at startup, not mid-request |
+| `src/signal_agent/client.py` | `complete` / `stream`, own retries with jitter, budget guard, one log line per call |
+| `src/signal_agent/errors.py` | typed failures, each mapping to exactly one recovery strategy |
+| `src/signal_agent/prompts/answer.md` | prompt versioned by content hash, so logs say `answer@320c4397` |
+| `src/signal_agent/cli.py` | exit codes per failure kind: 2 truncated, 3 auth, 4 provider, 5 budget, 7 config |
+| `tests/` | 20 tests against a scripted provider transport (fake, fast, no key) |
+
+Yours — this is the actual work of days 1–3:
+
+- Draw the request path from CLI to wire and back, from memory, before you edit
+  anything.
+- Run every failure drill below against the live API and read the log line and
+  exit code for each. If reality disagrees with the table, that is a bug: fix it
+  or write down why the behavior is acceptable.
+- Add the async path (`complete_async` or an async client class). The sync client
+  blocks, and FastAPI at stage 7 will need this. Do it now, while the surface is
+  small.
+- Write the Day 1–3 log entry and the 5-sentence explanation from
+  `docs/03-engineering-log.md`.
+
+## Drill commands (run these, do not read them)
+
+```bash
+# truncation → exit 2, partial text preserved in the error
+uv run signal ask "Explain retrieval augmented generation in detail" --max-tokens 6
+
+# timeout → exit 4 after retries
+SIGNAL_REQUEST_TIMEOUT_S=0.001 uv run signal ask "hello"
+
+# auth failure → exit 3, no retries, no cost
+OPENROUTER_API_KEY=sk-or-invalid uv run signal ask "hello"
+
+# config failure → exit 7, names the missing variable
+env -u OPENROUTER_API_KEY uv run signal ask "hello"
+
+# streaming: watch tokens arrive, then check usage on the final line
+uv run signal ask "Count to five, one word per line" --stream
+```
+
+Rate limits and 5xx are hard to force against a live provider; the tests in
+`tests/test_client.py` force them deterministically. That asymmetry is the
+lesson: mocks are for failure modes you cannot schedule.
 
 ## Concepts you must be able to explain
 
@@ -61,9 +132,9 @@ tests/test_client.py
 - [ ] streaming works and a killed connection produces a typed error, not a traceback
 - [ ] timeout, 429, 5xx, and invalid key each map to a distinct, logged error
 - [ ] truncated output is detected via `stop_reason` and surfaced to the caller
-- [ ] every call emits one JSON log line with tokens, latency, cost estimate
-- [ ] 3+ tests using a mocked HTTP layer (no live API in tests)
-- [ ] `ruff check` and `pytest` pass
+- [ ] every call emits one JSON log line with tokens, latency, cost
+- [ ] the scaffolded tests pass, plus at least one test you wrote for a bug you found
+- [ ] `ruff check` and `pytest` pass on a clean checkout
 - [ ] log entry written: what you can now explain that you could not on Day 1
 
 ## Failure drills

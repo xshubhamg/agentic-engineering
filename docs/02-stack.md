@@ -6,8 +6,8 @@ and write the date below so you do not re-litigate it in week three.
 | Layer | Default | Why | Swap if |
 | --- | --- | --- | --- |
 | Language | Python 3.12+, `uv` for env/deps | ecosystem, typing, speed of iteration | you already live in TS |
-| Model SDK | Anthropic Python SDK **or** OpenAI SDK — one, natively | learn request/response, streaming, tool schema, stop reasons before any abstraction | — |
-| Models | one strong model + one cheap model | forces you to think about model routing and cost per task | — |
+| Model access | **OpenRouter**, via the **OpenAI Python SDK** | one key, many models, OpenAI-compatible protocol — so everything you learn transfers to a direct OpenAI/Anthropic client later | direct provider SDK if you get a key |
+| Models | **one model everywhere**: `deepseek/deepseek-v4.1-flash` | consistency makes eval numbers comparable across stages; one variable at a time | `SIGNAL_MODEL` env var, no code change |
 | Validation | Pydantic v2 | every boundary (tool args, API request, LLM output) validated | — |
 | Config | env vars + `pydantic-settings` | no secrets in code; one config object | — |
 | Logging | `structlog` (JSON) | inspect a request after the fact; greppable | `loguru` if you prefer |
@@ -15,7 +15,7 @@ and write the date below so you do not re-litigate it in week three.
 | Retrieval | Postgres full-text first, `pgvector` when semantic is justified | prove the simpler thing fails before adding vectors | Pinecone/Qdrant if scale demands |
 | Orchestration | hand-rolled loop, then **LangGraph**; study **Temporal** | you must feel why checkpoints exist before a framework hides them | Temporal if you need long-running durable processes |
 | API | FastAPI | typed request/response, async, OpenAPI for free | — |
-| Tests | pytest (+ `pytest-asyncio`), `respx` for HTTP mocks | deterministic tests for a probabilistic system | — |
+| Tests | pytest, with a scripted `httpx2.MockTransport` | deterministic tests for a probabilistic system | `respx` if you stay on httpx 0.x |
 | Lint/format | ruff | fast, one tool | — |
 | Tracing | Langfuse (self-host or free cloud) | spans, tokens, cost, prompt versions; open source | LangSmith if you are OpenAI/Anthropic-native |
 | Packaging | Docker (multi-stage) | one artifact, same everywhere | — |
@@ -34,4 +34,32 @@ and write the date below so you do not re-litigate it in week three.
 - **Every secret from env**, never a default value that silently works.
 - **No real side effects in tests.** Email/LinkedIn senders have fakes.
 
-Decisions made on: ____ (date). Changes after this require a note in the log.
+Decisions made on: 2026-10-28. Changes after this require a note in the log.
+
+## Why OpenRouter, and what it costs you
+
+OpenRouter is an OpenAI-compatible gateway: same request shape, same streaming
+format, same tool-call schema. You learn the real protocol, not a vendor's
+wrapper, and you can swap the model with one env var.
+
+Two things it does not hide, and you should know:
+
+- **Cost comes back on the response** (`usage.cost`) because the request asks for
+  it (`extra_body={"usage": {"include": True}}`). No hardcoded price table, and
+  no silent stale pricing.
+- **`finish_reason` is the provider's, passed through.** `length` means
+  truncation. Treat any unknown value as "not a clean stop" rather than assuming
+  success.
+
+## Trap worth remembering (2026)
+
+`openai>=3` talks HTTP over **httpx2**, not httpx. Mocking libraries that patch
+httpx (like `respx`) silently miss, and your "unit" tests hit the live API. The
+fix used in `projects/01-model-app` is to inject a transport:
+
+```python
+httpx2.Client(transport=httpx2.MockTransport(handler))
+```
+
+If a test suite is suspiciously slow, or needs a key to pass, it is not a unit
+test.

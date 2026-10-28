@@ -57,8 +57,17 @@ monitored service.
 ```bash
 cd ~/code/Projects/ai/agentic-engineering
 cat docs/00-end-goal.md
-cat ROADMAP-30-DAYS.md          # read Day 1 only
+sed -n '1,40p' ROADMAP-30-DAYS.md      # read Day 1 only
+
+cd projects/01-model-app
+cp ../../.env.example .env             # paste your OpenRouter key
+uv sync
+uv run signal ask "What does a healthy sales pipeline look like for a B2B SaaS company?"
 ```
 
-Then open `projects/01-model-app/README.md` and start building. Do not read all
-eight briefs up front; the later ones will not make sense yet, and that is fine.
+The answer prints on stdout; one metadata line and one JSON log line print on
+stderr. Then open `projects/01-model-app/README.md` and work the failure drills
+— the scaffold is the starting point, not the assignment.
+
+Do not read all eight briefs up front; the later ones will not make sense yet,
+and that is fine.
