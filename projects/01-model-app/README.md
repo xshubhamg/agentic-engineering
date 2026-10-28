@@ -103,6 +103,8 @@ uv run signal ask "Explain retrieval augmented generation in detail" --max-token
 SIGNAL_REQUEST_TIMEOUT_S=0.001 uv run signal ask "hello"
 
 # auth failure → exit 3, no retries, no cost
+# (OpenRouter also answers "Missing Authentication header" for an invalid key,
+#  so do not go hunting for a missing header — check the key itself.)
 OPENROUTER_API_KEY=sk-or-invalid uv run signal ask "hello"
 
 # config failure → exit 7, names the missing variable

@@ -7,7 +7,7 @@ is actually done.
 
 | # | Stage | Days | Status | Gate date | Score /5 | Notes |
 | --- | --- | --- | --- | --- | --- | --- |
-| 1 | Model-powered application | 1–3 | not started | | | |
+| 1 | Model-powered application | 1–3 | in progress | | | scaffolded, awaiting first live run |
 | 2 | Evidence and retrieval | 4–7 | not started | | | |
 | 3 | Tools and permissions | 8–10 | not started | | | |
 | 4 | State and memory | 11–12 | not started | | | |
@@ -20,10 +20,11 @@ Status values: `not started` · `in progress` · `blocked` · `gate passed`.
 
 ## Current focus
 
-- Stage:
-- Day of plan:
-- The one thing I am stuck on:
-- Next single action:
+- Stage: 1 — model-powered application
+- Day of plan: Day 1
+- The one thing I am stuck on: nothing yet; run the drills
+- Next single action: copy `.env.example` to `projects/01-model-app/.env`, paste the
+  OpenRouter key, run `uv run signal ask "…"`
 
 ## Eval baseline history
 

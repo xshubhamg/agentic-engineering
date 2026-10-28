@@ -22,6 +22,11 @@ def configure_logging(level: str = "INFO", *, json_output: bool = True) -> None:
         stream=sys.stderr,
         level=_LEVELS.get(level.upper(), logging.INFO),
     )
+    # The SDK logs every HTTP request at INFO, including payloads. Our own
+    # `model_call` event is the signal; this is noise, and at DEBUG it would
+    # leak prompt text into logs.
+    for noisy in ("openai", "httpx", "httpx2", "httpcore"):
+        logging.getLogger(noisy).setLevel(logging.WARNING)
     renderer = (
         structlog.processors.JSONRenderer()
         if json_output
