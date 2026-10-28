@@ -1,5 +1,7 @@
 # Agentic Engineering — one system, eight upgrades, thirty days
 
+[![ci](https://github.com/xshubhamg/agentic-engineering/actions/workflows/ci.yml/badge.svg)](https://github.com/xshubhamg/agentic-engineering/actions/workflows/ci.yml)
+
 This repo is a 30-day build plan for agentic engineering. It is not eight demos.
 It is one product — **Signal**, an AI sales research and outreach agent — that you
 rebuild and harden eight times. Each stage adds one capability and one class of
